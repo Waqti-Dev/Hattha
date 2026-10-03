@@ -7,6 +7,7 @@ export async function GET() {
   if (!auth.user) return NextResponse.json({ error: "AUTHENTICATION_REQUIRED" }, { status: 401 });
   const { data: courier } = await supabase.from("couriers").select("is_available, verification_status").eq("id", auth.user.id).maybeSingle();
   if (!courier) return NextResponse.json({ error: "COURIER_PROFILE_REQUIRED" }, { status: 403 });
+  if ((courier as { verification_status?: string }).verification_status !== "VERIFIED") return NextResponse.json({ error: "COURIER_NOT_VERIFIED" }, { status: 403 });
   const { data: jobs, error } = await supabase.rpc("courier_list_delivery_jobs" as never);
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   return NextResponse.json({ jobs: jobs ?? [], available: Boolean((courier as { is_available?: boolean }).is_available), verified: (courier as { verification_status?: string }).verification_status === "VERIFIED" });

@@ -16,12 +16,12 @@ export async function POST() {
     await supabase.from("profiles").update(profile as never).eq("id", auth.user.id);
   }
 
-  const role = metadata.onboarding_role;
+  const role = metadata.onboarding_role === "MERCHANT" || metadata.onboarding_role === "COURIER" || metadata.onboarding_role === "CUSTOMER" ? metadata.onboarding_role : "CUSTOMER";
   if (role === "MERCHANT" && metadata.merchant_application) {
     const validation = validateMerchantApplication(metadata.merchant_application);
     if (!validation.ok) return NextResponse.json({ error: validation.error }, { status: 400 });
-    const { data: existing } = await supabase.from("merchant_applications").select("id, status").eq("applicant_id", auth.user.id).eq("status", "PENDING").maybeSingle();
-    if (!existing) {
+    const { data: existing } = await supabase.from("merchant_applications").select("id, status").eq("applicant_id", auth.user.id).order("created_at", { ascending: false }).limit(1).maybeSingle();
+    if (!existing || (existing as { status?: string }).status === "REJECTED") {
       const { error } = await supabase.from("merchant_applications").insert({
         applicant_id: auth.user.id,
         full_name: validation.data.fullName,
@@ -37,7 +37,7 @@ export async function POST() {
       } as never);
       if (error) return NextResponse.json({ error: error.message }, { status: 400 });
     }
-    return NextResponse.json({ ok: true, role, status: "PENDING" });
+    return NextResponse.json({ ok: true, role, status: (existing as { status?: string } | null)?.status === "APPROVED" ? "APPROVED" : "PENDING" });
   }
 
   if (role === "COURIER" && metadata.courier_application) {
@@ -52,6 +52,9 @@ export async function POST() {
         vehicle_type: validation.data.vehicleType,
         vehicle_plate: validation.data.vehiclePlate,
       } as never);
+      if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+    } else if ((existing as { verification_status?: string }).verification_status === "REJECTED") {
+      const { error } = await supabase.from("couriers").update({ verification_status: "PENDING_VERIFICATION", verification_note: null, national_id_reference: validation.data.nationalIdReference, vehicle_type: validation.data.vehicleType, vehicle_plate: validation.data.vehiclePlate, is_available: false } as never).eq("id", auth.user.id);
       if (error) return NextResponse.json({ error: error.message }, { status: 400 });
     }
     return NextResponse.json({ ok: true, role, status: "PENDING_VERIFICATION" });

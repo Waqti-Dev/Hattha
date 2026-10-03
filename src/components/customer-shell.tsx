@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { ReactNode } from "react";
 import { CartLink } from "@/components/cart-link";
 import { NotificationBell } from "@/components/notification-bell";
@@ -17,7 +18,7 @@ export function CustomerShell({ children }: { children: ReactNode }) {
       <header className="site-header">
         <div className="shell-inner flex min-h-[4.35rem] items-center justify-between gap-4">
           <Link href="/" className="brand-lockup" aria-label="العودة إلى الرئيسية">
-            <span className="brand-mark">ه</span>
+            <span className="brand-mark overflow-hidden bg-white p-1"><Image src="/hattha-brand.jpg" alt="" width={44} height={32} className="h-full w-full object-contain" /></span>
             <span><span className="brand-name">هاتها</span><span className="brand-tagline">توصيل بلطيم</span></span>
           </Link>
           <nav className="desktop-nav" aria-label="التنقل الرئيسي">

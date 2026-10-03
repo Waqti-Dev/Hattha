@@ -2,12 +2,19 @@ import Link from "next/link";
 import { CustomerShell } from "@/components/customer-shell";
 import { MerchantRefresh } from "@/components/merchant-refresh";
 import { getMerchantOrders } from "@/lib/merchant";
+import { getAccessState } from "@/lib/access";
+import { OnboardingStatusCard } from "@/components/onboarding-status-card";
 
 export const dynamic = "force-dynamic";
 const statusLabel: Record<string, string> = { FINDING_STORE: "طلبات جديدة", STORE_CONFIRMING: "طلبات جديدة", ACCEPTED: "مقبولة", PREPARING: "قيد التجهيز", READY_FOR_PICKUP: "جاهزة للاستلام", COURIER_ASSIGNED: "مع المندوب", PICKED_UP: "في التوصيل", DELIVERED: "مكتملة", CANCELLED: "ملغاة", FAILED: "مرفوضة" };
 const activeStatuses = ["FINDING_STORE", "STORE_CONFIRMING", "ACCEPTED", "PREPARING", "READY_FOR_PICKUP", "COURIER_ASSIGNED", "COURIER_GOING_TO_STORE", "COURIER_AT_STORE", "PICKED_UP", "COURIER_GOING_TO_CUSTOMER", "COURIER_AT_CUSTOMER"];
 
 export default async function MerchantDashboard() {
+  const access = await getAccessState();
+  if (access.user && access.role === "ADMIN") return <CustomerShell><section className="shell-inner px-3 py-10"><div className="surface-card p-8 text-center"><p className="font-black">هذا المسار مخصص للتاجر المعتمد.</p><Link href="/admin" className="btn-primary mt-5 inline-flex">العودة إلى لوحة الإدارة</Link></div></section></CustomerShell>;
+  if (access.user && access.role === "MERCHANT" && access.merchantApplication?.status === "PENDING") return <CustomerShell><section className="shell-inner px-3 py-10 sm:px-0 sm:py-14"><OnboardingStatusCard kind="merchant" status="pending" /></section></CustomerShell>;
+  if (access.user && access.role === "MERCHANT" && access.merchantApplication?.status === "REJECTED") return <CustomerShell><section className="shell-inner px-3 py-10 sm:px-0 sm:py-14"><OnboardingStatusCard kind="merchant" status="rejected" /></section></CustomerShell>;
+  if (access.user && access.role !== "MERCHANT") return <CustomerShell><section className="shell-inner px-3 py-10"><div className="surface-card p-8 text-center"><p className="font-black">لا تملك صلاحية الوصول إلى مساحة التاجر.</p><Link href={access.role === "ADMIN" ? "/admin" : "/account"} className="btn-primary mt-5 inline-flex">العودة</Link></div></section></CustomerShell>;
   const { user, stores, orders, applications } = await getMerchantOrders();
   const grouped = Array.from(new Set(activeStatuses.map((status) => statusLabel[status] || status))).map((label) => ({ label, orders: orders.filter((order) => statusLabel[(order as { status: string }).status] === label) }));
   const history = orders.filter((order) => ["DELIVERED", "CANCELLED", "FAILED", "REFUNDED"].includes((order as { status: string }).status));

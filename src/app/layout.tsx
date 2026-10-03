@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Cairo, Geist_Mono, Tajawal } from "next/font/google";
 import type { ReactNode } from "react";
 import { CartProvider } from "@/components/cart-provider";
 import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 
-const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
+const tajawal = Tajawal({ variable: "--font-tajawal", subsets: ["arabic", "latin"], weight: ["400", "500", "700", "800"] });
+const cairo = Cairo({ variable: "--font-cairo", subsets: ["arabic", "latin"], weight: ["600", "700", "800"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
@@ -17,7 +18,7 @@ const themeBootstrap = `(() => { try { const saved = localStorage.getItem('hatth
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="ar" dir="rtl" suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+    <html lang="ar" dir="rtl" suppressHydrationWarning className={`${tajawal.variable} ${cairo.variable} ${geistMono.variable} h-full antialiased`}>
       <head><script dangerouslySetInnerHTML={{ __html: themeBootstrap }} /></head>
       <body className="min-h-full"><ThemeProvider><CartProvider>{children}</CartProvider></ThemeProvider></body>
     </html>
