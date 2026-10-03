@@ -16,6 +16,10 @@ export default async function AccountPage() {
             <>
               <p className="font-bold">أنت مسجّل الدخول</p>
               <p className="mt-2 text-sm text-[#6a8278]">{user.email || "حساب هاتها"}</p>
+              <div className="mt-6 flex flex-wrap gap-3 text-sm font-bold">
+                <Link href="/addresses" className="rounded-xl bg-[#e6f2eb] px-4 py-2 text-[#27735e]">عناويني</Link>
+                <Link href="/orders" className="rounded-xl bg-[#e6f2eb] px-4 py-2 text-[#27735e]">طلباتي</Link>
+              </div>
             </>
           ) : (
             <>

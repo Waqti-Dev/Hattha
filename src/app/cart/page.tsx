@@ -26,6 +26,7 @@ export default function CartPage() {
           ))}
         </div>
         <div className="mt-6 rounded-3xl bg-[#173b35] p-6 text-white"><div className="flex items-center justify-between"><span className="text-[#d4e8df]">عدد الوحدات</span><span className="font-black">{count}</span></div><div className="mt-4 flex items-center justify-between border-t border-white/15 pt-4"><span className="font-black">الإجمالي الفرعي</span><span className="text-2xl font-black">{subtotal.toFixed(2)} ج.م</span></div><p className="mt-4 text-xs leading-6 text-[#b7dec9]">الإجمالي يعكس الأسعار المعروضة حالياً. سيتم التحقق من الأسعار والتوفر من الخادم عند إنشاء الطلب في المرحلة التالية.</p></div>
+        <Link href="/checkout" className="mt-5 block rounded-2xl bg-[#f2c879] px-5 py-4 text-center font-black text-[#173b35]">متابعة إلى العنوان والدفع</Link>
         <Link href="/" className="mt-6 inline-flex font-bold text-[#568171]">← متابعة التسوق</Link>
       </section>
     </CustomerShell>
