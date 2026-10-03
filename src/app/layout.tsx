@@ -13,9 +13,12 @@ export const metadata: Metadata = {
   description: "اكتشف المتاجر والمنتجات المتاحة للتوصيل في بلطيم.",
 };
 
+const themeBootstrap = `(() => { try { const saved = localStorage.getItem('hattha-theme'); const theme = saved === 'light' || saved === 'dark' || saved === 'system' ? saved : 'system'; const dark = theme === 'dark' || (theme === 'system' && matchMedia('(prefers-color-scheme: dark)').matches); document.documentElement.classList.toggle('dark', dark); document.documentElement.dataset.theme = theme; } catch (_) {} })()`;
+
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+      <head><script dangerouslySetInnerHTML={{ __html: themeBootstrap }} /></head>
       <body className="min-h-full"><ThemeProvider><CartProvider>{children}</CartProvider></ThemeProvider></body>
     </html>
   );

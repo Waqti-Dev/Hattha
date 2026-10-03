@@ -3,6 +3,42 @@ import type { ReactNode } from "react";
 import { CartLink } from "@/components/cart-link";
 import { NotificationBell } from "@/components/notification-bell";
 
+const mobileLinks = [
+  { href: "/", label: "الرئيسية" },
+  { href: "/orders", label: "طلباتي" },
+  { href: "/cart", label: "السلة" },
+  { href: "/account", label: "حسابي" },
+];
+
 export function CustomerShell({ children }: { children: ReactNode }) {
-  return <div className="min-h-screen bg-[#faf8f3] text-[#173b35]"><header className="sticky top-0 z-20 border-b border-[#dce8e1] bg-[#faf8f3]/95 backdrop-blur"><div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-4 py-4 sm:px-6"><Link href="/" className="flex items-center gap-2" aria-label="العودة إلى الرئيسية"><span className="grid h-10 w-10 place-items-center rounded-2xl bg-[#e2f1e9] text-xl">ه</span><span><span className="block text-lg font-black tracking-tight">هاتها</span><span className="block text-[11px] text-[#6a8278]">توصيل بلطيم</span></span></Link><nav className="flex items-center gap-1 text-sm font-bold" aria-label="التنقل الرئيسي"><Link href="/" className="hidden rounded-xl px-2 py-2 hover:bg-white sm:block">الرئيسية</Link><CartLink /><NotificationBell /><Link href="/account" className="rounded-xl px-2 py-2 hover:bg-white">حسابي</Link></nav></div></header><main>{children}</main><footer className="mx-auto mt-16 max-w-6xl border-t border-[#dce8e1] px-4 py-8 text-center text-sm text-[#6a8278] sm:px-6"><p>هاتها — نقرّب احتياجاتك اليومية منك في بلطيم</p><div className="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-2 text-xs font-bold"><Link href="/privacy">الخصوصية</Link><Link href="/terms">الشروط</Link><Link href="/cancellation">الإلغاء</Link><Link href="/refund">الاسترداد</Link><Link href="/settings">الإعدادات</Link></div></footer></div>;
+  return (
+    <div className="app-shell text-[#173b35]">
+      <a href="#main-content" className="skip-link">تجاوز إلى المحتوى</a>
+      <header className="site-header">
+        <div className="shell-inner flex min-h-[4.35rem] items-center justify-between gap-4">
+          <Link href="/" className="brand-lockup" aria-label="العودة إلى الرئيسية">
+            <span className="brand-mark">ه</span>
+            <span><span className="brand-name">هاتها</span><span className="brand-tagline">توصيل بلطيم</span></span>
+          </Link>
+          <nav className="desktop-nav" aria-label="التنقل الرئيسي">
+            <Link href="/">الرئيسية</Link>
+            <Link href="/orders">طلباتي</Link>
+            <CartLink />
+            <NotificationBell />
+            <Link href="/account">حسابي</Link>
+          </nav>
+        </div>
+      </header>
+      <main id="main-content" className="pb-20 sm:pb-0">{children}</main>
+      <footer className="shell-inner mt-16 border-t border-[#dce8e1] px-0 py-8 text-center text-sm text-[#6a8278] sm:mt-20">
+        <p className="font-bold">هاتها — نقرّب احتياجاتك اليومية منك في بلطيم</p>
+        <div className="mt-3 flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs font-bold">
+          <Link href="/privacy">الخصوصية</Link><Link href="/terms">الشروط</Link><Link href="/cancellation">الإلغاء</Link><Link href="/refund">الاسترداد</Link><Link href="/settings">الإعدادات</Link>
+        </div>
+      </footer>
+      <nav className="mobile-bottom-nav" aria-label="التنقل السريع">
+        {mobileLinks.map((item) => <Link key={item.href} href={item.href} className="mobile-nav-link">{item.label}</Link>)}
+      </nav>
+    </div>
+  );
 }

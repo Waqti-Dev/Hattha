@@ -6,80 +6,12 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
-  const router = useRouter();
-  const [mode, setMode] = useState<"email" | "phone">("email");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [phone, setPhone] = useState("");
-  const [otp, setOtp] = useState("");
-  const [otpSent, setOtpSent] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const next = (() => {
-    if (typeof window === "undefined") return "/";
-    const requested = new URLSearchParams(window.location.search).get("next");
-    return requested?.startsWith("/") ? requested : "/";
-  })();
-
-  async function finishLogin() {
-    await fetch("/api/onboarding/bootstrap", { method: "POST" });
-    router.push(next);
-    router.refresh();
-  }
-
-  async function signInWithEmail(event: React.FormEvent) {
-    event.preventDefault();
-    setLoading(true);
-    setError(null);
-    const { error: authError } = await createClient().auth.signInWithPassword({ email, password });
-    if (authError) setError("تعذّر تسجيل الدخول. تحقق من البريد وكلمة المرور.");
-    else await finishLogin();
-    setLoading(false);
-  }
-
-  async function sendPhoneOtp(event: React.FormEvent) {
-    event.preventDefault();
-    setLoading(true);
-    setError(null);
-    const { error: authError } = await createClient().auth.signInWithOtp({ phone });
-    if (authError) setError("تعذّر إرسال رمز التحقق. تأكد من الرقم وإعدادات الرسائل.");
-    else setOtpSent(true);
-    setLoading(false);
-  }
-
-  async function verifyPhoneOtp(event: React.FormEvent) {
-    event.preventDefault();
-    setLoading(true);
-    setError(null);
-    const { error: authError } = await createClient().auth.verifyOtp({ phone, token: otp, type: "sms" });
-    if (authError) setError("رمز التحقق غير صحيح أو منتهي.");
-    else await finishLogin();
-    setLoading(false);
-  }
-
-  async function signInWithGoogle() {
-    setLoading(true);
-    setError(null);
-    const { error: authError } = await createClient().auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` },
-    });
-    if (authError) {
-      setError("تعذّر بدء تسجيل الدخول باستخدام Google. تحقق من إعداد المزود.");
-      setLoading(false);
-    }
-  }
-
-  return (
-    <main className="grid min-h-screen place-items-center bg-[#faf8f3] px-4 text-[#173b35]">
-      <section className="w-full max-w-md rounded-[2rem] bg-white p-8 shadow-xl shadow-[#173b35]/10">
-        <div className="text-center"><div className="mx-auto grid h-16 w-16 place-items-center rounded-3xl bg-[#e2f1e9] text-3xl font-black">ه</div><h1 className="mt-6 text-3xl font-black">تسجيل الدخول إلى هاتها</h1><p className="mt-3 text-sm leading-7 text-[#6a8278]">استخدم طريقة الدخول المناسبة لك.</p></div>
-        <button type="button" onClick={signInWithGoogle} disabled={loading} className="mt-7 w-full rounded-2xl border border-[#c8dcd1] px-5 py-3 font-black hover:bg-[#f5faf7] disabled:opacity-60">المتابعة باستخدام Google</button>
-        <div className="mt-6 grid grid-cols-2 rounded-2xl bg-[#f5faf7] p-1 text-sm font-black"><button type="button" onClick={() => setMode("email")} className={`rounded-xl px-3 py-2 ${mode === "email" ? "bg-white shadow-sm" : "text-[#6a8278]"}`}>البريد الإلكتروني</button><button type="button" onClick={() => setMode("phone")} className={`rounded-xl px-3 py-2 ${mode === "phone" ? "bg-white shadow-sm" : "text-[#6a8278]"}`}>الهاتف + رمز</button></div>
-        {mode === "email" ? <form onSubmit={signInWithEmail} className="mt-5 space-y-3"><label className="block text-sm font-bold">البريد الإلكتروني<input required type="email" value={email} onChange={(event) => setEmail(event.target.value)} className="mt-1 w-full rounded-2xl border border-[#c8dcd1] px-4 py-3" /></label><label className="block text-sm font-bold">كلمة المرور<input required type="password" minLength={8} value={password} onChange={(event) => setPassword(event.target.value)} className="mt-1 w-full rounded-2xl border border-[#c8dcd1] px-4 py-3" /></label><button disabled={loading} className="w-full rounded-2xl bg-[#173b35] px-5 py-3 font-black text-white disabled:opacity-60">{loading ? "جارٍ الدخول…" : "تسجيل الدخول"}</button></form> : <form onSubmit={otpSent ? verifyPhoneOtp : sendPhoneOtp} className="mt-5 space-y-3"><label className="block text-sm font-bold">رقم الهاتف<input required type="tel" placeholder="+20..." value={phone} onChange={(event) => setPhone(event.target.value)} className="mt-1 w-full rounded-2xl border border-[#c8dcd1] px-4 py-3" /></label>{otpSent && <label className="block text-sm font-bold">رمز التحقق<input required inputMode="numeric" value={otp} onChange={(event) => setOtp(event.target.value)} className="mt-1 w-full rounded-2xl border border-[#c8dcd1] px-4 py-3" /></label>}<button disabled={loading} className="w-full rounded-2xl bg-[#173b35] px-5 py-3 font-black text-white disabled:opacity-60">{loading ? "جارٍ المعالجة…" : otpSent ? "تحقق ودخول" : "إرسال رمز التحقق"}</button></form>}
-        {error && <p role="alert" className="mt-4 text-sm font-bold text-rose-700">{error}</p>}
-        <p className="mt-6 text-center text-sm text-[#6a8278]">ليس لديك حساب؟ <Link href="/register" className="font-black text-[#173b35] underline">إنشاء حساب</Link></p>
-      </section>
-    </main>
-  );
+  const router = useRouter(); const [mode, setMode] = useState<"email" | "phone">("email"); const [email, setEmail] = useState(""); const [password, setPassword] = useState(""); const [phone, setPhone] = useState(""); const [otp, setOtp] = useState(""); const [otpSent, setOtpSent] = useState(false); const [loading, setLoading] = useState(false); const [error, setError] = useState<string | null>(null);
+  const next = (() => { if (typeof window === "undefined") return "/"; const requested = new URLSearchParams(window.location.search).get("next"); return requested?.startsWith("/") ? requested : "/"; })();
+  async function finishLogin() { await fetch("/api/onboarding/bootstrap", { method: "POST" }); router.push(next); router.refresh(); }
+  async function signInWithEmail(event: React.FormEvent) { event.preventDefault(); setLoading(true); setError(null); const { error: authError } = await createClient().auth.signInWithPassword({ email, password }); if (authError) setError("تعذّر تسجيل الدخول. تحقق من البريد وكلمة المرور."); else await finishLogin(); setLoading(false); }
+  async function sendPhoneOtp(event: React.FormEvent) { event.preventDefault(); setLoading(true); setError(null); const { error: authError } = await createClient().auth.signInWithOtp({ phone }); if (authError) setError("تعذّر إرسال رمز التحقق. تأكد من الرقم وإعدادات الرسائل."); else setOtpSent(true); setLoading(false); }
+  async function verifyPhoneOtp(event: React.FormEvent) { event.preventDefault(); setLoading(true); setError(null); const { error: authError } = await createClient().auth.verifyOtp({ phone, token: otp, type: "sms" }); if (authError) setError("رمز التحقق غير صحيح أو منتهي."); else await finishLogin(); setLoading(false); }
+  async function signInWithGoogle() { setLoading(true); setError(null); const { error: authError } = await createClient().auth.signInWithOAuth({ provider: "google", options: { redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` } }); if (authError) { setError("تعذّر بدء تسجيل الدخول باستخدام Google. تحقق من إعداد المزود."); setLoading(false); } }
+  return <main className="grid min-h-screen place-items-center px-3 py-8 sm:px-4"><section className="surface-card w-full max-w-md p-6 sm:p-8"><div className="text-center"><div className="brand-mark mx-auto">ه</div><h1 className="mt-6 text-3xl font-black">تسجيل الدخول إلى هاتها</h1><p className="mt-3 text-sm leading-7 text-[#6a8278]">استخدم طريقة الدخول المناسبة لك.</p></div><button type="button" onClick={signInWithGoogle} disabled={loading} className="btn-secondary mt-7 w-full">المتابعة باستخدام Google</button><div className="mt-6 grid grid-cols-2 rounded-2xl bg-[#f5faf7] p-1 text-sm font-black"><button type="button" onClick={() => setMode("email")} className={`rounded-xl px-3 py-2 ${mode === "email" ? "bg-white text-[#173b35] shadow-sm" : "text-[#6a8278]"}`}>البريد الإلكتروني</button><button type="button" onClick={() => setMode("phone")} className={`rounded-xl px-3 py-2 ${mode === "phone" ? "bg-white text-[#173b35] shadow-sm" : "text-[#6a8278]"}`}>الهاتف + رمز</button></div>{mode === "email" ? <form onSubmit={signInWithEmail} className="mt-5 space-y-3"><label className="block text-sm font-bold">البريد الإلكتروني<input required type="email" value={email} onChange={(event) => setEmail(event.target.value)} className="mt-1 w-full rounded-2xl border border-[#c8dcd1] px-4 py-3" /></label><label className="block text-sm font-bold">كلمة المرور<input required type="password" minLength={8} value={password} onChange={(event) => setPassword(event.target.value)} className="mt-1 w-full rounded-2xl border border-[#c8dcd1] px-4 py-3" /></label><button disabled={loading} className="btn-primary w-full disabled:opacity-60">{loading ? "جارٍ الدخول…" : "تسجيل الدخول"}</button></form> : <form onSubmit={otpSent ? verifyPhoneOtp : sendPhoneOtp} className="mt-5 space-y-3"><label className="block text-sm font-bold">رقم الهاتف<input required type="tel" placeholder="+20..." value={phone} onChange={(event) => setPhone(event.target.value)} className="mt-1 w-full rounded-2xl border border-[#c8dcd1] px-4 py-3" /></label>{otpSent && <label className="block text-sm font-bold">رمز التحقق<input required inputMode="numeric" value={otp} onChange={(event) => setOtp(event.target.value)} className="mt-1 w-full rounded-2xl border border-[#c8dcd1] px-4 py-3" /></label>}<button disabled={loading} className="btn-primary w-full disabled:opacity-60">{loading ? "جارٍ المعالجة…" : otpSent ? "تحقق ودخول" : "إرسال رمز التحقق"}</button></form>}{error && <p role="alert" className="mt-4 rounded-2xl bg-rose-50 p-4 text-sm font-bold text-rose-700">{error}</p>}<p className="mt-6 text-center text-sm text-[#6a8278]">ليس لديك حساب؟ <Link href="/register" className="font-black text-[#173b35] underline">إنشاء حساب</Link></p></section></main>;
 }
