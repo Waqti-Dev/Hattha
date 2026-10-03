@@ -1,0 +1,3 @@
+import Link from "next/link";
+import { CustomerShell } from "@/components/customer-shell";
+export default function CancellationPage() { return <CustomerShell><section className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14"><Link href="/settings" className="text-sm font-bold text-[#568171]">← الإعدادات</Link><h1 className="mt-6 text-3xl font-black">سياسة الإلغاء</h1><div className="mt-6 space-y-5 leading-8 text-[#5d756b]"><p>يمكن للعميل طلب الإلغاء من صفحة الطلب ما دام الطلب في مرحلة ما قبل قبول المتجر.</p><p>بعد قبول المتجر أو بدء التجهيز، قد لا يظهر خيار الإلغاء لأن الطلب دخل مرحلة التنفيذ.</p><p>إذا تعذر تنفيذ الطلب من المتجر، يسجل النظام الحالة المناسبة ويعرضها في تتبع الطلب.</p></div></section></CustomerShell>; }

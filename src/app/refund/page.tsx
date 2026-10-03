@@ -1,0 +1,3 @@
+import Link from "next/link";
+import { CustomerShell } from "@/components/customer-shell";
+export default function RefundPage() { return <CustomerShell><section className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14"><Link href="/settings" className="text-sm font-bold text-[#568171]">← الإعدادات</Link><h1 className="mt-6 text-3xl font-black">سياسة الاسترداد</h1><div className="mt-6 space-y-5 leading-8 text-[#5d756b]"><p>طلبات الدفع عند الاستلام لا تتضمن دفعة إلكترونية مقدماً؛ يوضح النظام حالة الدفع حتى يتم التسليم.</p><p>في حال وجود دفعة إلكترونية مستقبلية، تتم معالجة أي استرداد وفق حالة الدفع وسجل العملية ومراجعة الجهة المسؤولة.</p><p>للاستفسارات المتعلقة بطلب محدد، احتفظ برقم الطلب وتواصل عبر قناة الدعم المعتمدة.</p></div></section></CustomerShell>; }

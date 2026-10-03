@@ -2,13 +2,4 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 type Context = { params: Promise<{ orderId: string }> };
-
-export async function POST(_request: Request, { params }: Context) {
-  const { orderId } = await params;
-  const supabase = await createClient();
-  const { data: auth } = await supabase.auth.getUser();
-  if (!auth.user) return NextResponse.json({ error: "AUTHENTICATION_REQUIRED" }, { status: 401 });
-  const { error } = await supabase.rpc("cancel_customer_order" as never, { p_order_id: orderId } as never);
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
-  return NextResponse.json({ ok: true });
-}
+export async function POST(request: Request, { params }: Context) { const { orderId } = await params; const supabase = await createClient(); const { data: auth } = await supabase.auth.getUser(); if (!auth.user) return NextResponse.json({ error: "AUTHENTICATION_REQUIRED" }, { status: 401 }); const body = await request.json().catch(() => ({})) as { action?: unknown }; if (body.action !== undefined && body.action !== "CANCEL" && body.action !== "CONFIRM_RECEIPT") return NextResponse.json({ error: "UNKNOWN_ORDER_ACTION" }, { status: 400 }); const rpc = body.action === "CONFIRM_RECEIPT" ? "customer_confirm_delivery" : "cancel_customer_order"; const { error } = await supabase.rpc(rpc as never, { p_order_id: orderId } as never); if (error) return NextResponse.json({ error: error.message }, { status: 400 }); return NextResponse.json({ ok: true }); }

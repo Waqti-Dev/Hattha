@@ -1,65 +1,22 @@
 import Link from "next/link";
 import { CustomerShell } from "@/components/customer-shell";
-import { getStores, type Store } from "@/lib/customer";
+import { FavoriteButton } from "@/components/favorite-button";
+import { getActiveOffers, getPopularStores, getStoreCategories, getStores, type Store } from "@/lib/customer";
 
 export const dynamic = "force-dynamic";
+type Props = { searchParams?: Promise<{ q?: string; category?: string }> };
 
-export default async function Home() {
-  let stores: Store[] = [];
-  let loadError = false;
+function StoreCard({ store, orderCount }: { store: Store; orderCount?: number }) {
+  const isOpen = store.is_open && store.operational_available;
+  return <Link href={`/stores/${store.id}`} className="group relative rounded-3xl border border-[#e1ebe5] bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"><div className="absolute left-4 top-4 z-10"><FavoriteButton storeId={store.id} /></div><div className="mb-6 flex items-start justify-between gap-3"><div className="grid h-14 w-14 place-items-center rounded-2xl bg-[#e6f2eb] text-2xl">{store.name.trim().charAt(0)}</div><span className={`rounded-full px-3 py-1 text-xs font-black ${isOpen ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"}`}>{isOpen ? "مفتوح الآن" : "مغلق الآن"}</span></div><h3 className="text-xl font-black group-hover:text-[#27735e]">{store.name}</h3>{store.category && <p className="mt-1 text-xs font-black text-[#779187]">{store.category}</p>}<p className="mt-2 line-clamp-2 min-h-12 text-sm leading-6 text-[#6a8278]">{store.description || "متجر محلي على هاتها"}</p><p className="mt-4 border-t border-[#edf2ee] pt-4 text-sm text-[#6a8278]">{store.address}</p>{typeof orderCount === "number" && <p className="mt-2 text-xs font-bold text-[#27735e]">{orderCount} طلب مكتمل أو قيد التنفيذ</p>}</Link>;
+}
 
-  try {
-    stores = await getStores();
-  } catch {
-    loadError = true;
-  }
-
-  return (
-    <CustomerShell>
-      <section className="mx-auto max-w-6xl px-4 pb-10 pt-8 sm:px-6 sm:pt-14">
-        <div className="overflow-hidden rounded-[2rem] bg-[#173b35] px-6 py-10 text-white shadow-xl shadow-[#173b35]/10 sm:px-12 sm:py-14">
-          <p className="mb-4 text-sm font-bold text-[#b7dec9]">أهلاً بك في هاتها</p>
-          <h1 className="max-w-2xl text-3xl font-black leading-tight sm:text-5xl">كل ما تحتاجه من متاجر بلطيم، في طريقه إليك.</h1>
-          <p className="mt-5 max-w-xl text-base leading-8 text-[#d4e8df]">تصفّح المتاجر المحلية واكتشف المنتجات المتاحة بالقرب منك.</p>
-          <a href="#stores" className="mt-7 inline-flex rounded-2xl bg-[#f2c879] px-5 py-3 font-black text-[#173b35] transition hover:bg-[#ffd98e]">تصفّح المتاجر</a>
-        </div>
-
-        <div id="stores" className="mt-12">
-          <div className="mb-5 flex items-end justify-between gap-4">
-            <div>
-              <p className="text-sm font-bold text-[#779187]">المتاجر القريبة</p>
-              <h2 className="mt-1 text-2xl font-black">اختر متجرك</h2>
-            </div>
-            <span className="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-[#6a8278]">{stores.length} متجر</span>
-          </div>
-
-          {loadError ? (
-            <div className="rounded-3xl border border-rose-100 bg-rose-50 p-6 text-rose-800">تعذّر تحميل المتاجر الآن. حاول تحديث الصفحة مرة أخرى.</div>
-          ) : stores.length === 0 ? (
-            <div className="rounded-3xl border border-dashed border-[#c8dcd1] bg-white p-10 text-center">
-              <p className="text-lg font-black">لا توجد متاجر متاحة حالياً</p>
-              <p className="mt-2 text-sm text-[#6a8278]">سنخبرك عندما تنضم متاجر جديدة إلى هاتها.</p>
-            </div>
-          ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {stores.map((store) => {
-                const isOpen = store.is_open && store.operational_available;
-                return (
-                  <Link key={store.id} href={`/stores/${store.id}`} className="group rounded-3xl border border-[#e1ebe5] bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
-                    <div className="mb-6 flex items-start justify-between gap-3">
-                      <div className="grid h-14 w-14 place-items-center rounded-2xl bg-[#e6f2eb] text-2xl">{store.name.trim().charAt(0)}</div>
-                      <span className={`rounded-full px-3 py-1 text-xs font-black ${isOpen ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"}`}>{isOpen ? "مفتوح الآن" : "مغلق الآن"}</span>
-                    </div>
-                    <h3 className="text-xl font-black group-hover:text-[#27735e]">{store.name}</h3>
-                    <p className="mt-2 line-clamp-2 min-h-12 text-sm leading-6 text-[#6a8278]">{store.description || "متجر محلي على هاتها"}</p>
-                    <p className="mt-4 border-t border-[#edf2ee] pt-4 text-sm text-[#6a8278]">{store.address}</p>
-                  </Link>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </section>
-    </CustomerShell>
-  );
+export default async function Home({ searchParams }: Props) {
+  const params = searchParams ? await searchParams : {};
+  const search = params.q?.trim() ?? "";
+  const category = params.category?.trim() ?? "";
+  let stores: Store[] = []; let categories: string[] = []; let popular: Array<Store & { order_count: number }> = []; let offers: Awaited<ReturnType<typeof getActiveOffers>> = []; let newStores: Store[] = []; let loadError = false;
+  try { [stores, categories, popular, offers, newStores] = await Promise.all([getStores({ search, category }), getStoreCategories(), getPopularStores(), getActiveOffers(), getStores()]); } catch { loadError = true; }
+  const popularById = new Map(popular.map((store) => [store.id, store.order_count]));
+  return <CustomerShell><section className="mx-auto max-w-6xl px-4 pb-10 pt-8 sm:px-6 sm:pt-14"><div className="overflow-hidden rounded-[2rem] bg-[#173b35] px-6 py-10 text-white shadow-xl shadow-[#173b35]/10 sm:px-12 sm:py-14"><p className="mb-4 text-sm font-bold text-[#b7dec9]">أهلاً بك في هاتها</p><h1 className="max-w-2xl text-3xl font-black leading-tight sm:text-5xl">كل ما تحتاجه من متاجر بلطيم، في طريقه إليك.</h1><p className="mt-5 max-w-xl text-base leading-8 text-[#d4e8df]">اكتشف متاجر حقيقية ومنتجات متاحة الآن، ثم اطلب بالدفع عند الاستلام.</p><form action="/" className="mt-7 flex flex-col gap-2 sm:flex-row"><label className="sr-only" htmlFor="home-search">ابحث عن متجر أو منتج</label><input id="home-search" name="q" defaultValue={search} placeholder="ابحث عن متجر أو منتج…" className="min-h-12 flex-1 rounded-2xl border-0 bg-white px-4 text-[#173b35] outline-none" /><button className="min-h-12 rounded-2xl bg-[#f2c879] px-5 font-black text-[#173b35]">بحث</button></form></div><div className="mt-8 flex gap-2 overflow-x-auto pb-2" aria-label="تصنيفات المتاجر"><Link href="/" className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-black ${!category ? "bg-[#173b35] text-white" : "bg-white text-[#6a8278]"}`}>كل التصنيفات</Link>{categories.map((item) => <Link key={item} href={`/?category=${encodeURIComponent(item)}${search ? `&q=${encodeURIComponent(search)}` : ""}`} className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-black ${category === item ? "bg-[#173b35] text-white" : "bg-white text-[#6a8278]"}`}>{item}</Link>)}</div>{loadError ? <div className="mt-8 rounded-3xl border border-rose-100 bg-rose-50 p-6 text-rose-800">تعذّر تحميل بيانات المتاجر الآن. <Link href="/" className="font-black underline">حاول مرة أخرى</Link></div> : <>{search || category ? <section id="stores" className="mt-8"><div className="mb-5 flex items-end justify-between gap-4"><div><p className="text-sm font-bold text-[#779187]">نتائج البحث والتصفية</p><h2 className="mt-1 text-2xl font-black">المتاجر المطابقة</h2></div><span className="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-[#6a8278]">{stores.length} متجر</span></div>{stores.length === 0 ? <div className="rounded-3xl border border-dashed border-[#c8dcd1] bg-white p-10 text-center"><p className="text-lg font-black">لا توجد نتائج مطابقة حالياً</p><p className="mt-2 text-sm text-[#6a8278]">جرّب اسماً آخر أو تصنيفاً مختلفاً.</p></div> : <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{stores.map((store) => <StoreCard key={store.id} store={store} orderCount={popularById.get(store.id)} />)}</div>}</section> : <><section className="mt-10"><div className="mb-5 flex items-end justify-between gap-4"><div><p className="text-sm font-bold text-[#779187]">المتاجر المتاحة</p><h2 className="mt-1 text-2xl font-black">اكتشف متجراً قريباً</h2></div><span className="rounded-full bg-white px-3 py-1.5 text-xs font-bold text-[#6a8278]">{stores.length} متجر</span></div>{stores.length === 0 ? <div className="rounded-3xl border border-dashed border-[#c8dcd1] bg-white p-10 text-center"><p className="text-lg font-black">لا توجد متاجر متاحة حالياً</p><p className="mt-2 text-sm text-[#6a8278]">سنخبرك عندما تنضم متاجر جديدة إلى هاتها.</p></div> : <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{stores.map((store) => <StoreCard key={store.id} store={store} />)}</div>}</section><section className="mt-12"><div className="mb-5"><p className="text-sm font-bold text-[#779187]">من الطلبات الحقيقية</p><h2 className="mt-1 text-2xl font-black">الأكثر طلباً</h2></div>{popular.length === 0 ? <div className="rounded-3xl border border-dashed border-[#c8dcd1] bg-white p-8 text-center text-sm text-[#6a8278]">ستظهر المتاجر الأكثر طلباً بعد تسجيل طلبات حقيقية.</div> : <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{popular.map((store) => <StoreCard key={store.id} store={store} orderCount={store.order_count} />)}</div>}</section><section className="mt-12"><div className="mb-5"><p className="text-sm font-bold text-[#779187]">الأحدث</p><h2 className="mt-1 text-2xl font-black">متاجر جديدة</h2></div>{newStores.length === 0 ? <div className="rounded-3xl border border-dashed border-[#c8dcd1] bg-white p-8 text-center text-sm text-[#6a8278]">لا توجد متاجر جديدة حالياً.</div> : <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{newStores.slice(0, 3).map((store) => <StoreCard key={store.id} store={store} />)}</div>}</section><section className="mt-12"><div className="mb-5"><p className="text-sm font-bold text-[#779187]">عروض فعلية</p><h2 className="mt-1 text-2xl font-black">خصومات المتاجر</h2></div>{offers.length === 0 ? <div className="rounded-3xl border border-dashed border-[#c8dcd1] bg-white p-8 text-center text-sm text-[#6a8278]">لا توجد عروض نشطة حالياً.</div> : <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{offers.map((offer) => <Link key={offer.id} href={offer.stores ? `/stores/${offer.stores.id}` : "/"} className="rounded-3xl border border-amber-100 bg-[#fffaf0] p-5"><span className="text-2xl">%</span><h3 className="mt-4 text-lg font-black">{offer.name}</h3><p className="mt-2 text-sm text-[#6a8278]">{offer.stores?.name ?? "متجر"}</p><p className="mt-4 font-black text-amber-700">خصم {offer.discount_type === "PERCENTAGE" ? `${offer.discount_value}%` : `${offer.discount_value} ج.م`}</p></Link>)}</div>}</section></>}</>}</section></CustomerShell>;
 }
