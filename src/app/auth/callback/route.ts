@@ -6,7 +6,14 @@ export async function GET(request: Request) {
   const code = requestUrl.searchParams.get("code");
   if (code) {
     const supabase = await createClient();
-    await supabase.auth.exchangeCodeForSession(code);
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    if (!error) {
+      await fetch(new URL("/api/onboarding/bootstrap", requestUrl), {
+        method: "POST",
+        headers: { cookie: request.headers.get("cookie") ?? "" },
+        cache: "no-store",
+      }).catch(() => undefined);
+    }
   }
   const next = requestUrl.searchParams.get("next");
   return NextResponse.redirect(new URL(next?.startsWith("/") ? next : "/", request.url));

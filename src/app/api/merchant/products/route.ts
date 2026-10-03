@@ -1,0 +1,34 @@
+import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+
+export async function GET(request: Request) {
+  const storeId = new URL(request.url).searchParams.get("storeId");
+  if (!storeId) return NextResponse.json({ error: "STORE_REQUIRED" }, { status: 400 });
+  const supabase = await createClient();
+  const { data: auth } = await supabase.auth.getUser();
+  if (!auth.user) return NextResponse.json({ error: "AUTHENTICATION_REQUIRED" }, { status: 401 });
+  const { data, error } = await supabase.from("store_products").select("id, store_id, product_id, price, is_active, products(id, name, category, description), inventory(status, quantity)").eq("store_id", storeId).order("created_at");
+  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  return NextResponse.json({ products: data ?? [] });
+}
+
+export async function POST(request: Request) {
+  const supabase = await createClient();
+  const { data: auth } = await supabase.auth.getUser();
+  if (!auth.user) return NextResponse.json({ error: "AUTHENTICATION_REQUIRED" }, { status: 401 });
+  const body = await request.json();
+  if (!body.storeId || !body.name || Number(body.price) < 0 || Number(body.quantity) < 0) return NextResponse.json({ error: "INVALID_PRODUCT" }, { status: 400 });
+  const { data, error } = await supabase.rpc("merchant_upsert_product", {
+    p_store_id: body.storeId,
+    p_product_id: body.storeProductId ?? null,
+    p_name: String(body.name),
+    p_category: String(body.category ?? ""),
+    p_description: String(body.description ?? ""),
+    p_price: Number(body.price),
+    p_is_active: body.isActive !== false,
+    p_inventory_status: body.status === "UNAVAILABLE" ? "UNAVAILABLE" : "AVAILABLE",
+    p_quantity: Number(body.quantity),
+  } as never);
+  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  return NextResponse.json({ storeProductId: data });
+}

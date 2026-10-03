@@ -18,6 +18,7 @@ export type StoreProduct = {
   store_id: string;
   product_id: string;
   price: number;
+  effective_price: number;
   is_active: boolean;
   product: {
     id: string;
@@ -30,6 +31,14 @@ export type StoreProduct = {
     quantity: number | null;
     last_updated_at: string;
   } | null;
+  offers: Array<{
+    id: string;
+    name: string;
+    discount_type: "PERCENTAGE" | "FIXED";
+    discount_value: number;
+    starts_at: string;
+    ends_at: string;
+  }>;
 };
 
 export async function getCurrentUser() {
@@ -72,7 +81,7 @@ export async function getStoreProducts(storeId: string): Promise<StoreProduct[]>
   const { data, error } = await supabase
     .from("store_products")
     .select(
-      "id, store_id, product_id, price, is_active, products(id, name, description, image_path)",
+      "id, store_id, product_id, price, is_active, products(id, name, description, image_path, category), offer_products(offers(id, name, discount_type, discount_value, starts_at, ends_at))",
     )
     .eq("store_id", storeId)
     .eq("is_active", true)
@@ -83,8 +92,14 @@ export async function getStoreProducts(storeId: string): Promise<StoreProduct[]>
   const products = (data ?? []).map((item) => {
     const row = item as unknown as Omit<StoreProduct, "product" | "inventory"> & {
       products: StoreProduct["product"];
+      offer_products: Array<{ offers: StoreProduct["offers"][number] | null }>;
     };
-    return { ...row, product: row.products, inventory: null };
+    const offers = row.offer_products?.map((item) => item.offers).filter(Boolean) as StoreProduct["offers"];
+    const effectivePrice = offers.reduce((lowest, offer) => {
+      const candidate = offer.discount_type === "PERCENTAGE" ? Math.max(0, Number(row.price) - Number(row.price) * Number(offer.discount_value) / 100) : Math.max(0, Number(row.price) - Number(offer.discount_value));
+      return Math.min(lowest, Number(candidate.toFixed(2)));
+    }, Number(row.price));
+    return { ...row, product: row.products, inventory: null, offers, effective_price: effectivePrice };
   });
 
   if (products.length === 0) return [];

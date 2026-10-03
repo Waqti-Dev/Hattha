@@ -1,0 +1,25 @@
+"use client";
+
+import { useState } from "react";
+
+type ProductRow = { id: string; price: number; is_active: boolean; products: { name: string; category?: string | null; description?: string | null } | null; inventory: { status: string; quantity: number | null } | null };
+
+export function MerchantProductManager({ storeId, initialProducts }: { storeId: string; initialProducts: unknown[] }) {
+  const [products, setProducts] = useState(initialProducts as ProductRow[]);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [form, setForm] = useState({ name: "", category: "", description: "", price: "", quantity: "0", status: "AVAILABLE" });
+  const [error, setError] = useState<string | null>(null);
+  async function save(event: React.FormEvent) {
+    event.preventDefault(); setError(null);
+    const response = await fetch("/api/merchant/products", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ storeId, storeProductId: editingId, ...form, price: Number(form.price), quantity: Number(form.quantity) }) });
+    const data = await response.json();
+    if (!response.ok) { setError(data.error ?? "تعذر حفظ المنتج"); return; }
+    window.location.reload();
+  }
+  async function deactivate(id: string) { const response = await fetch(`/api/merchant/products/${id}`, { method: "DELETE" }); if (response.ok) setProducts(products.filter((product) => product.id !== id)); }
+  function edit(product: ProductRow) {
+    setEditingId(product.id);
+    setForm({ name: product.products?.name ?? "", category: product.products?.category ?? "", description: product.products?.description ?? "", price: String(product.price), quantity: String(product.inventory?.quantity ?? 0), status: product.inventory?.status === "UNAVAILABLE" ? "UNAVAILABLE" : "AVAILABLE" });
+  }
+  return <div className="space-y-6"><form onSubmit={save} className="rounded-3xl bg-white p-6 shadow-sm"><h2 className="text-xl font-black">{editingId ? "تعديل المنتج" : "إضافة منتج"}</h2><div className="mt-4 grid gap-3 sm:grid-cols-2">{([['name','اسم المنتج'],['category','التصنيف'],['description','الوصف'],['price','السعر'],['quantity','الكمية']] as const).map(([key,label]) => <label key={key} className="block text-sm font-bold">{label}<input required={key !== 'description' && key !== 'category'} type={key === 'price' || key === 'quantity' ? 'number' : 'text'} min={key === 'price' || key === 'quantity' ? '0' : undefined} value={form[key]} onChange={(event) => setForm({ ...form, [key]: event.target.value })} className="mt-1 w-full rounded-2xl border border-[#c8dcd1] px-4 py-3" /></label>)}<label className="block text-sm font-bold">الحالة<select value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value })} className="mt-1 w-full rounded-2xl border border-[#c8dcd1] px-4 py-3"><option value="AVAILABLE">متاح</option><option value="UNAVAILABLE">غير متاح</option></select></label></div><div className="mt-4 flex gap-2"><button className="rounded-2xl bg-[#173b35] px-5 py-3 font-black text-white">حفظ المنتج</button>{editingId && <button type="button" onClick={() => { setEditingId(null); setForm({ name: "", category: "", description: "", price: "", quantity: "0", status: "AVAILABLE" }); }} className="rounded-2xl border border-[#c8dcd1] px-5 py-3 font-black">إلغاء</button>}</div>{error && <p className="mt-3 text-sm font-bold text-rose-700">{error}</p>}</form><div className="grid gap-3">{products.map((product) => <article key={product.id} className="flex flex-col justify-between gap-3 rounded-3xl bg-white p-5 shadow-sm sm:flex-row sm:items-center"><div><h3 className="font-black">{product.products?.name ?? "منتج"}</h3><p className="text-sm text-[#6a8278]">{Number(product.price).toFixed(2)} ج.م · {product.inventory?.quantity ?? 0} وحدة · {product.inventory?.status === "AVAILABLE" ? "متاح" : "غير متاح"}</p></div><div className="flex gap-2">{product.is_active && <><button type="button" onClick={() => edit(product)} className="rounded-2xl border border-[#c8dcd1] px-4 py-2 text-sm font-black">تعديل</button><button type="button" onClick={() => deactivate(product.id)} className="rounded-2xl border border-rose-200 px-4 py-2 text-sm font-black text-rose-700">تعطيل</button></>}</div></article>)}</div></div>;
+}

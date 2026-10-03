@@ -5,13 +5,14 @@ export type MerchantStore = { id: string; name: string; address: string };
 export async function getMerchantContext() {
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
-  if (!auth.user) return { user: null, stores: [] as MerchantStore[] };
+  if (!auth.user) return { user: null, stores: [] as MerchantStore[], applications: [] as unknown[] };
   const { data: role } = await supabase.from("user_roles").select("role").eq("user_id", auth.user.id).eq("role", "MERCHANT").maybeSingle();
-  if (!role) return { user: auth.user, stores: [] as MerchantStore[] };
+  const { data: applications } = await supabase.from("merchant_applications").select("id, store_name, status, review_note, created_at").eq("applicant_id", auth.user.id).order("created_at", { ascending: false }).limit(5);
+  if (!role) return { user: auth.user, stores: [] as MerchantStore[], applications: applications ?? [] };
   const { data, error } = await supabase.from("store_staff").select("store_id, stores(id, name, address)").eq("user_id", auth.user.id);
   if (error) throw new Error(error.message);
   const stores = (data ?? []).map((row) => (row as unknown as { stores: MerchantStore }).stores).filter(Boolean);
-  return { user: auth.user, stores };
+  return { user: auth.user, stores, applications: applications ?? [] };
 }
 
 export async function getMerchantOrders() {
@@ -21,6 +22,20 @@ export async function getMerchantOrders() {
   const { data, error } = await supabase.from("orders").select("id, store_id, status, payment_method, subtotal, delivery_fee, service_fee, total, customer_note, created_at, updated_at, stores(name), payments(status), order_items(id, product_name_snapshot, unit_price, quantity, line_total)").in("store_id", context.stores.map((store) => store.id)).order("created_at", { ascending: false });
   if (error) throw new Error(error.message);
   return { ...context, orders: (data ?? []) as unknown[] };
+}
+
+export async function getMerchantProducts(storeId: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("store_products").select("id, store_id, product_id, price, is_active, products(id, name, category, description), inventory(status, quantity)").eq("store_id", storeId).order("created_at");
+  if (error) throw new Error(error.message);
+  return (data ?? []) as unknown[];
+}
+
+export async function getMerchantOffers(storeId: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("offers").select("id, store_id, name, discount_type, discount_value, starts_at, ends_at, max_quantity, is_active, offer_products(store_product_id)").eq("store_id", storeId).order("starts_at");
+  if (error) throw new Error(error.message);
+  return (data ?? []) as unknown[];
 }
 
 export async function getMerchantOrder(orderId: string) {
