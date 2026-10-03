@@ -3,8 +3,9 @@
 **Date:** 2026-10-03
 **Repository:** `https://github.com/Waqti-Dev/Hattha`
 **Branch:** `main`
-**Current commit:** `61fe22921c9f2a0e48c6a0c90a6908a2ee27aaca`
-**Commit message:** `Convert Hattha to real merchant pilot`
+**Current commit:** `5203d515829fe8c369454b7a7f02b67885d98772`
+**Commit message:** `Add real pilot handoff`
+**Pilot implementation commit:** `61fe22921c9f2a0e48c6a0c90a6908a2ee27aaca` (`Convert Hattha to real merchant pilot`)
 
 ## Completed
 
@@ -119,13 +120,17 @@ All local checks passed on commit `61fe229`:
 
 ## Deployment
 
-Vercel production deployment for commit `61fe229` is READY:
+The Vercel production deployment for the pilot implementation commit `61fe229` is READY, and the latest handoff commit `5203d51` has successful Vercel status checks:
+
+- `Vercel – hattha`: [success for `5203d51`](https://vercel.com/hatha3/hattha/8kgaH8SzcL1jBYtoSCCttfF8tASn)
+- `Vercel – hattha-tmgl`: [success for `5203d51`](https://vercel.com/hatha3/hattha-tmgl/EXqMxgHpDesSC3L3rVVqbBXKoKK3)
 
 - Deployment URL: `https://hattha-lc32wbfjh-hatha3.vercel.app/`
 - Project alias: `https://hattha.vercel.app/`
-- Deployment state: `READY`
+- Pilot implementation deployment state: `READY`
+- Latest public alias check: HTTP `200`
 
-A connector runtime fetch was denied with HTTP `403` because Vercel deployment protection/connector authorization still blocks the protected deployment. No application or database workaround was made for this.
+The named deployment URL remains protected and redirects unauthenticated requests to Vercel SSO; this is deployment protection, not an application failure. No application or database workaround was made for this.
 
 ## Manual provider configuration required
 
