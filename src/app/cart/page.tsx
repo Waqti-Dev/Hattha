@@ -1,0 +1,33 @@
+"use client";
+
+import Link from "next/link";
+import { CustomerShell } from "@/components/customer-shell";
+import { useCart } from "@/components/cart-provider";
+
+export default function CartPage() {
+  const { cart, hydrated, count, subtotal, increase, decrease, remove, clear } = useCart();
+
+  if (!hydrated) {
+    return <CustomerShell><section className="mx-auto max-w-3xl px-4 py-16 text-center"><p className="font-bold text-[#6a8278]">جارٍ تحميل السلة…</p></section></CustomerShell>;
+  }
+
+  if (cart.items.length === 0) {
+    return <CustomerShell><section className="mx-auto max-w-2xl px-4 py-16 text-center sm:py-24"><div className="mx-auto grid h-20 w-20 place-items-center rounded-3xl bg-[#e6f2eb] text-4xl">🛒</div><h1 className="mt-6 text-3xl font-black">السلة فارغة</h1><p className="mt-3 text-[#6a8278]">تصفّح المتاجر وأضف ما تحتاجه إلى سلتك.</p><Link href="/" className="mt-7 inline-flex rounded-2xl bg-[#173b35] px-5 py-3 font-black text-white">ابدأ التسوق</Link></section></CustomerShell>;
+  }
+
+  return (
+    <CustomerShell>
+      <section className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
+        <div className="flex items-end justify-between gap-4"><div><p className="text-sm font-bold text-[#779187]">مراجعة اختياراتك</p><h1 className="mt-1 text-3xl font-black">سلة التسوق</h1></div><button type="button" onClick={clear} className="text-sm font-bold text-rose-700 hover:text-rose-900">تفريغ السلة</button></div>
+        <div className="mt-6 rounded-3xl border border-[#e1ebe5] bg-white p-5 shadow-sm"><p className="text-sm text-[#6a8278]">المتجر</p><p className="mt-1 text-lg font-black">{cart.storeName}</p></div>
+        <div className="mt-4 space-y-3">
+          {cart.items.map((item) => (
+            <article key={item.storeProductId} className="rounded-3xl border border-[#e1ebe5] bg-white p-4 shadow-sm"><div className="flex gap-4"><div className="grid h-20 w-20 shrink-0 place-items-center rounded-2xl bg-[#f2f6f2] text-3xl">{item.productName.trim().charAt(0)}</div><div className="min-w-0 flex-1"><div className="flex items-start justify-between gap-3"><h2 className="font-black">{item.productName}</h2><button type="button" onClick={() => remove(item.storeProductId)} className="text-xs font-bold text-rose-700">حذف</button></div><p className="mt-1 text-sm text-[#6a8278]">{item.unitPrice.toFixed(2)} ج.م للقطعة</p><div className="mt-3 flex items-center justify-between"><div className="flex items-center gap-3 rounded-xl bg-[#faf8f3] p-1"><button type="button" onClick={() => decrease(item.storeProductId)} className="grid h-8 w-8 place-items-center rounded-lg bg-white text-lg font-black" aria-label={`تقليل كمية ${item.productName}`}>−</button><span className="min-w-5 text-center font-black">{item.quantity}</span><button type="button" onClick={() => increase(item.storeProductId)} className="grid h-8 w-8 place-items-center rounded-lg bg-white text-lg font-black" aria-label={`زيادة كمية ${item.productName}`}>+</button></div><p className="font-black text-[#27735e]">{(item.unitPrice * item.quantity).toFixed(2)} ج.م</p></div></div></div></article>
+          ))}
+        </div>
+        <div className="mt-6 rounded-3xl bg-[#173b35] p-6 text-white"><div className="flex items-center justify-between"><span className="text-[#d4e8df]">عدد الوحدات</span><span className="font-black">{count}</span></div><div className="mt-4 flex items-center justify-between border-t border-white/15 pt-4"><span className="font-black">الإجمالي الفرعي</span><span className="text-2xl font-black">{subtotal.toFixed(2)} ج.م</span></div><p className="mt-4 text-xs leading-6 text-[#b7dec9]">الإجمالي يعكس الأسعار المعروضة حالياً. سيتم التحقق من الأسعار والتوفر من الخادم عند إنشاء الطلب في المرحلة التالية.</p></div>
+        <Link href="/" className="mt-6 inline-flex font-bold text-[#568171]">← متابعة التسوق</Link>
+      </section>
+    </CustomerShell>
+  );
+}
