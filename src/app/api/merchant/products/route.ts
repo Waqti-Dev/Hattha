@@ -10,9 +10,14 @@ export async function GET(request: Request) {
   const { data: staff } = await supabase.from("store_staff").select("store_id").eq("store_id", storeId).eq("user_id", auth.user.id).maybeSingle();
   const { data: role } = await supabase.from("user_roles").select("role").eq("user_id", auth.user.id).eq("role", "MERCHANT").maybeSingle();
   if (!staff || !role) return NextResponse.json({ error: "MERCHANT_STORE_ACCESS_DENIED" }, { status: 403 });
-  const { data, error } = await supabase.from("store_products").select("id, store_id, product_id, price, is_active, products(id, name, category, description), inventory(status, quantity)").eq("store_id", storeId).order("created_at");
+  const { data, error } = await supabase.from("store_products").select("id, store_id, product_id, price, is_active, products(id, name, category, description)").eq("store_id", storeId).order("created_at");
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
-  return NextResponse.json({ products: data ?? [] });
+  const { data: inventory, error: inventoryError } = await supabase.from("inventory").select("product_id, status, quantity").eq("store_id", storeId);
+  if (inventoryError) return NextResponse.json({ error: inventoryError.message }, { status: 400 });
+  const productRows = (data ?? []) as unknown as Array<Record<string, unknown> & { product_id: string }>;
+  const inventoryRows = (inventory ?? []) as unknown as Array<{ product_id: string; status: string; quantity: number | null }>;
+  const inventoryByProduct = new Map(inventoryRows.map((row) => [row.product_id, { status: row.status, quantity: row.quantity }]));
+  return NextResponse.json({ products: productRows.map((row) => ({ ...row, inventory: inventoryByProduct.get(row.product_id) ?? null })) });
 }
 
 export async function POST(request: Request) {

@@ -3,6 +3,8 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 const migration = readFileSync(resolve(process.cwd(), "supabase/migrations/20261003162000_merchant_pilot_transitions.sql"), "utf8");
+const merchantLibrary = readFileSync(resolve(process.cwd(), "src/lib/merchant.ts"), "utf8");
+const productsRoute = readFileSync(resolve(process.cwd(), "src/app/api/merchant/products/route.ts"), "utf8");
 
 describe("HATTAHA Merchant Pilot transitions", () => {
   it("requires an authenticated merchant and store staff relationship", () => {
@@ -23,5 +25,11 @@ describe("HATTAHA Merchant Pilot transitions", () => {
   it("does not expose the transition RPC to anonymous users", () => {
     expect(migration).toContain("revoke execute on function public.merchant_update_order_status");
     expect(migration).toContain("grant execute on function public.merchant_update_order_status");
+  });
+  it("loads inventory explicitly because inventory is not a PostgREST relation of store_products", () => {
+    expect(merchantLibrary).not.toContain("products(id, name, category, description), inventory(status, quantity)");
+    expect(merchantLibrary).toContain('from("inventory")');
+    expect(productsRoute).not.toContain("products(id, name, category, description), inventory(status, quantity)");
+    expect(productsRoute).toContain('from("inventory")');
   });
 });
