@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 const migration = readFileSync(resolve(process.cwd(), "supabase/migrations/20261003190000_marketplace_hardening.sql"), "utf8");
+const privilegeMigration = readFileSync(resolve(process.cwd(), "supabase/migrations/20261004120000_security_privileges_and_indexes.sql"), "utf8");
 const orderApi = readFileSync(resolve(process.cwd(), "src/app/api/orders/[orderId]/route.ts"), "utf8");
 const merchantProductsApi = readFileSync(resolve(process.cwd(), "src/app/api/merchant/products/route.ts"), "utf8");
 
@@ -23,5 +24,13 @@ describe("marketplace hardening", () => {
     expect(orderApi).toContain("UNKNOWN_ORDER_ACTION");
     expect(merchantProductsApi).toContain("MERCHANT_STORE_ACCESS_DENIED");
     expect(merchantProductsApi).toContain("eq(\"user_id\", auth.user.id)");
+  });
+
+  it("does not expose trigger-only or internal pricing helpers as client RPCs", () => {
+    expect(privilegeMigration).toContain("revoke execute on function public.notify_new_order()");
+    expect(privilegeMigration).toContain("revoke execute on function public.ensure_delivery_for_ready_order()");
+    expect(privilegeMigration).toContain("revoke execute on function public.calculate_effective_store_product_line_total(uuid, integer)");
+    expect(privilegeMigration).toContain("customer_favorites_store_idx");
+    expect(privilegeMigration).toContain("customer_favorites_store_product_idx");
   });
 });
