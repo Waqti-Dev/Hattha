@@ -4,6 +4,7 @@ import { resolve } from "node:path";
 
 const creation = readFileSync(resolve(process.cwd(), "supabase/migrations/20261003160000_customer_order_creation.sql"), "utf8");
 const cancellation = readFileSync(resolve(process.cwd(), "supabase/migrations/20261003161000_customer_order_cancellation.sql"), "utf8");
+const rowAssignmentFix = readFileSync(resolve(process.cwd(), "supabase/migrations/20261004131500_fix_customer_order_row_assignments.sql"), "utf8");
 
 describe("HATTAHA Phase 2 order boundaries", () => {
   it("creates orders through a security-definer server function", () => {
@@ -19,6 +20,12 @@ describe("HATTAHA Phase 2 order boundaries", () => {
   it("does not expose order creation to anonymous clients", () => {
     expect(creation).toContain("revoke execute on function public.create_customer_order");
     expect(creation).toContain("grant execute on function public.create_customer_order");
+  });
+  it("assigns selected composite rows into rowtype variables by columns", () => {
+    expect(rowAssignmentFix).toContain("select sp.* into v_store_product");
+    expect(rowAssignmentFix).toContain("select p.* into v_product");
+    expect(rowAssignmentFix).not.toContain("select sp into v_store_product");
+    expect(rowAssignmentFix).not.toContain("select p into v_product");
   });
   it("limits cancellation to pre-acceptance states", () => {
     expect(cancellation).toContain("cancel_customer_order");

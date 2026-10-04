@@ -4,6 +4,7 @@ import { resolve } from "node:path";
 
 const migration = readFileSync(resolve(process.cwd(), "supabase/migrations/20261003190000_marketplace_hardening.sql"), "utf8");
 const privilegeMigration = readFileSync(resolve(process.cwd(), "supabase/migrations/20261004120000_security_privileges_and_indexes.sql"), "utf8");
+const noOfferPricingMigration = readFileSync(resolve(process.cwd(), "supabase/migrations/20261004131700_fix_no_offer_line_total.sql"), "utf8");
 const orderApi = readFileSync(resolve(process.cwd(), "src/app/api/orders/[orderId]/route.ts"), "utf8");
 const merchantProductsApi = readFileSync(resolve(process.cwd(), "src/app/api/merchant/products/route.ts"), "utf8");
 
@@ -18,6 +19,12 @@ describe("marketplace hardening", () => {
     expect(migration).toContain("calculate_effective_store_product_line_total");
     expect(migration).toContain("INSUFFICIENT_INVENTORY");
     expect(migration).toContain("quantity = quantity - v_quantity");
+  });
+
+  it("preserves catalog pricing when no active offer exists", () => {
+    expect(noOfferPricingMigration).toContain("case when o.id is null then null else");
+    expect(noOfferPricingMigration).toContain("coalesce(min(");
+    expect(noOfferPricingMigration).toContain("v_price * p_quantity");
   });
 
   it("rejects unknown order mutations and guards merchant reads", () => {
