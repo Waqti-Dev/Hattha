@@ -78,6 +78,8 @@ h1, h2, h3, h4 { letter-spacing: -0.025em; font-family: var(--font-cairo), var(-
 .hero-panel > * { position: relative; z-index: 1; }
 .status-chip { display: inline-flex; align-items: center; gap: .35rem; border-radius: 999px; padding: .35rem .7rem; font-size: .7rem; font-weight: 900; line-height: 1; }
 .status-chip::before { width: .38rem; height: .38rem; border-radius: 999px; background: currentColor; content: ""; }
+.status-pulse { animation: status-pulse 2.2s ease-in-out infinite; }
+@keyframes status-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgb(255 159 28 / 0%); } 50% { box-shadow: 0 0 0 .45rem rgb(255 159 28 / 12%); } }
 .btn-primary { min-height: 2.9rem; border: 1px solid var(--brand-strong); border-radius: .95rem; background: var(--brand-strong); padding: .65rem 1.05rem; color: #fff; font-weight: 900; box-shadow: 0 8px 18px rgb(22 60 53 / 13%); }
 .btn-primary:hover { background: var(--brand); transform: translateY(-1px); }
 .btn-secondary { min-height: 2.9rem; border: 1px solid var(--border); border-radius: .95rem; background: var(--surface); padding: .65rem 1.05rem; color: var(--foreground); font-weight: 850; }
@@ -155,4 +157,5 @@ h1, h2, h3, h4 { letter-spacing: -0.025em; font-family: var(--font-cairo), var(-
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+  .status-pulse { animation: none !important; }
 }

@@ -19,7 +19,7 @@ export async function getAccessState(): Promise<AccessState> {
     supabase.from("couriers").select("id, verification_status, verification_note").eq("id", auth.user.id).maybeSingle(),
   ]);
   const roles = (roleRows ?? []).map((row) => String((row as { role: string }).role));
-  const role = roles.includes("ADMIN") ? "ADMIN" : roles.includes("MERCHANT") ? "MERCHANT" : roles.includes("COURIER") ? "COURIER" : "CUSTOMER";
+  const role = roles.includes("ADMIN") ? "ADMIN" : roles.includes("MERCHANT") || merchantApplication ? "MERCHANT" : roles.includes("COURIER") || courier ? "COURIER" : "CUSTOMER";
   return { user: { id: auth.user.id, email: auth.user.email }, roles, role, merchantApplication: merchantApplication as AccessState["merchantApplication"], courier: courier as AccessState["courier"] };
 }
 

@@ -2,6 +2,8 @@ import Link from "next/link";
 import { CustomerShell } from "@/components/customer-shell";
 import { FavoriteButton } from "@/components/favorite-button";
 import { getActiveOffers, getPopularStores, getStoreCategories, getStores, type Store } from "@/lib/customer";
+import { getAccessState, getHomePath } from "@/lib/access";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 type Props = { searchParams?: Promise<{ q?: string; category?: string }> };
@@ -22,6 +24,8 @@ function StoreCard({ store, orderCount }: { store: Store; orderCount?: number })
 }
 
 export default async function Home({ searchParams }: Props) {
+  const access = await getAccessState();
+  if (access.user && access.role !== "CUSTOMER") redirect(getHomePath(access));
   const params = searchParams ? await searchParams : {};
   const search = params.q?.trim() ?? "";
   const category = params.category?.trim() ?? "";

@@ -4,6 +4,7 @@ import { resolve } from "node:path";
 
 const root = resolve(process.cwd());
 const migration = readFileSync(resolve(root, "supabase/migrations/20261003223000_admin_onboarding_workflows.sql"), "utf8");
+const isolationMigration = readFileSync(resolve(root, "supabase/migrations/20261004064000_onboarding_role_isolation_notifications.sql"), "utf8");
 const bootstrap = readFileSync(resolve(root, "src/app/api/onboarding/bootstrap/route.ts"), "utf8");
 const access = readFileSync(resolve(root, "src/lib/access.ts"), "utf8");
 
@@ -28,5 +29,11 @@ describe("admin and onboarding boundaries", () => {
   it("contains no password or credential literal", () => {
     expect(migration.toLowerCase()).not.toContain("password");
     expect(migration.toLowerCase()).not.toContain("hattha.owner");
+  });
+  it("does not assign CUSTOMER to merchant or courier applicants", () => {
+    expect(isolationMigration).toContain("coalesce(v_onboarding_role, 'CUSTOMER') not in ('MERCHANT', 'COURIER')");
+    expect(isolationMigration).toContain("delete from public.user_roles where user_id = v_app.applicant_id and role = 'CUSTOMER'");
+    expect(isolationMigration).toContain("MERCHANT_APPROVED");
+    expect(isolationMigration).toContain("COURIER_APPROVED");
   });
 });
