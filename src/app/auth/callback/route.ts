@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { getAccessState, getHomePath } from "@/lib/access";
 
@@ -10,8 +9,8 @@ export async function GET(request: Request) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      const cookieHeader = (await cookies()).getAll().map(({ name, value }) => `${name}=${value}`).join("; ");
-      await fetch(new URL("/api/onboarding/bootstrap", requestUrl), { method: "POST", headers: { cookie: cookieHeader }, cache: "no-store" }).catch(() => undefined);
+      const { error: bootstrapError } = await supabase.rpc("bootstrap_onboarding" as never);
+      if (bootstrapError) return NextResponse.redirect(new URL("/login?onboarding=retry", request.url));
     }
   }
   const state = await getAccessState();
